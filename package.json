@@ -4,6 +4,7 @@
     "version": "0.0.1",
     "private": true,
     "dependencies": {
+        "crypto-secure-random-digit": "^1.0.10"
     },
     "devDependencies": {
         "jest": "^25.4.0"
