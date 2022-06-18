@@ -49,6 +49,6 @@ exports.handler = async (event = {}) => {
 
 // Send secret code over SMS via Amazon Simple Notification Service (SNS)
 async function sendSMSviaSNS(phoneNumber, passCode) {
-    const params = { "Message": `Use OTP ${passCode} to login to your Cookr Account. Cookr doesn't ask for OTP or Contact number to be shared with anyone including Cookr Personnel. U1KVE0N3Sc1`, "PhoneNumber": phoneNumber };
+    const params = { "Message": `Use OTP ${passCode} to login to your Cookr Account. Cookr doesn't ask for OTP or Contact number to be shared with anyone including Cookr Personnel. /wEu764u/qK`, "PhoneNumber": phoneNumber };
     await sns.publish(params).promise();
 }
