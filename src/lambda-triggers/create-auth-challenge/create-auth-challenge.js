@@ -17,6 +17,7 @@
 const crypto_secure_random_digit = require("crypto-secure-random-digit");
 const AWS = require("aws-sdk");
 var sns = new AWS.SNS();
+const axios = require("axios");
 
 // Main handler
 exports.handler = async (event = {}) => {
@@ -31,7 +32,7 @@ exports.handler = async (event = {}) => {
     if (event.request.session && event.request.session.length && event.request.session.slice(-1)[0].challengeName == "SRP_A" || event.request.session.length == 0) {
 
         passCode = crypto_secure_random_digit.randomDigits(6).join('');
-        await sendSMSviaSNS(phoneNumber, passCode); 
+        await sendSMSviaExotel(phoneNumber, passCode); 
 
     } else {
         
@@ -47,8 +48,67 @@ exports.handler = async (event = {}) => {
     return event;
 };
 
-// Send secret code over SMS via Amazon Simple Notification Service (SNS)
 async function sendSMSviaSNS(phoneNumber, passCode) {
-    const params = { "Message": `Use OTP ${passCode} to login to your Cookr Account. Cookr doesn't ask for OTP or Contact number to be shared with anyone including Cookr Personnel. VKONQURuIlU`, "PhoneNumber": phoneNumber };
-    await sns.publish(params).promise();
+    if(phoneNumber !== '+919999999999'){
+        //const params = { "Message": `Use OTP ${passCode} to login to your Cookr Account. Cookr doesn't ask for OTP or Contact number to be shared with anyone including Cookr Personnel. bLM48Y63jzo`, "PhoneNumber": phoneNumber };
+    var params = {
+    Message: `Cookr: Your OTP is ${passCode}, you have requested this OTP for completing your registration with Cookr. PLEASE DO NOT SHARE THIS OTP WITH ANYONE. Orw9FfygPcl`,
+    MessageStructure: 'string',
+    PhoneNumber: phoneNumber,
+    MessageAttributes: {
+        "AWS.SNS.SMS.SenderID": {
+            DataType: 'String', StringValue: 'Cookr'
+        },
+        "AWS.SNS.SMS.SMSType": {
+            DataType: 'String', StringValue: 'Transactional'
+        },
+        "AWS.MM.SMS.EntityId": {
+            DataType: 'String', StringValue: '1701165718168578728'
+        },
+        "AWS.MM.SMS.TemplateId": {
+            DataType: 'String', StringValue: '1707166375278247471'
+        }
+    }
+};
+await sns.publish(params).promise();
 }
+}
+
+async function sendSMSviaExotel(phoneNumber, passCode) {
+    let sms = `Cookr: Your OTP is ${passCode}, you have requested this OTP for completing your registration with Cookr. PLEASE DO NOT SHARE THIS OTP WITH ANYONE. Orw9FfygPcl`
+    const key="df4a288becb966ff5970686cfb2c99cfd14dcb525eb60bf5"
+    const sid="cookr3"
+    const token="013ea0bce3c1f63a3c74734c35b375ac80ab3b3ee5b14c53"
+    const from="iCookr"
+    const to= phoneNumber
+    const body= sms
+    const entityId= '1701165718168578728'
+    const templateId= '1707166375278247471'
+    const smsType= 'transactional'
+    
+    
+    const formUrlEncoded = x =>Object.keys(x).reduce((p, c) => p + `&${c}=${encodeURIComponent(x[c])}`, '')
+    
+    const url="https://"+key+":"+token+"@api.exotel.in/v1/Accounts/"+sid+"/Sms/send.json"
+    try{
+        await axios.post(url, 
+            formUrlEncoded({
+           "From": from,
+           "To": to,
+           "Body":body,
+           "DltEntityId": entityId,
+           "DltTemplateId": templateId,
+           "SmsType": smsType,
+         }),
+         {   
+             withCredentials: true,
+             headers: {
+                 "Accept":"application/x-www-form-urlencoded",
+                 "Content-Type": "application/x-www-form-urlencoded"
+             }
+           },
+           );
+    } catch (e) {
+        await sendSMSviaSNS(phoneNumber, passCode);
+    }
+    }
