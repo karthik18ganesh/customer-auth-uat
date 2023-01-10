@@ -32,8 +32,10 @@ exports.handler = async (event = {}) => {
     if (event.request.session && event.request.session.length && event.request.session.slice(-1)[0].challengeName == "SRP_A" || event.request.session.length == 0) {
 
         passCode = crypto_secure_random_digit.randomDigits(6).join('');
-        await sendSMSviaExotel(phoneNumber, passCode); 
-
+        if(phoneNumber !== '+919999999999'){
+            await sendSMSviaExotel(phoneNumber, passCode);
+        }
+         
     } else {
         
         const previousChallenge = event.request.session.slice(-1)[0];
